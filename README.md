@@ -22,5 +22,6 @@ Sử dụng git
 1. git config --global user.name "phantrithien" : Cấu hình Git
 2. git config --global user.email "ph.trithien@gmail.com" : Cấu hình Git
 3. git init : Khởi tạo Git Repository
-3. git add . : thêm tất cả
-
+4. git add . : thêm tất cả
+5. git status : Kiểm tra trạng thái
+6. git commit -m "mô tả"
