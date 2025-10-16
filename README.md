@@ -24,4 +24,6 @@ Sử dụng git
 3. git init : Khởi tạo Git Repository
 4. git add . : thêm tất cả
 5. git status : Kiểm tra trạng thái
-6. git commit -m "mô tả"
+6. git commit -m "mô tả" : Commit thay đổi
+7. git remote add origin https://github.com/phantrithien/lanvitura.git : Kết nối với GitHub
+8. git push -u origin <main> : Đẩy mã lên remote
