@@ -24,6 +24,8 @@
             <a href="{{ route('admin.dashboard') }}">Dashboard</a>
             <a href="{{ route('admin.categories.index') }}">Quản lý Danh mục</a>
             <a href="{{ route('admin.products.index') }}">Quản lý Sản phẩm</a>
+            <a href="{{ route('admin.orders.index') }}">Quản lý Đơn hàng</a>
+            <a href="{{ route('admin.reviews.index') }}">Quản lý Đánh giá</a>
         </nav>
     </div>
 

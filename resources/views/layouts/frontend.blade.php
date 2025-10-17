@@ -1,3 +1,7 @@
+@php
+    use Darryldecode\Cart\Facades\CartFacade as Cart;
+@endphp
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -14,7 +18,9 @@
             <div>
                 <a href="{{ route('products.index') }}" class="mx-2 text-gray-800 hover:text-gray-600">Sản phẩm</a>
                 <a href="#" class="mx-2 text-gray-800 hover:text-gray-600">Bài viết</a>
-                <a href="#" class="mx-2 text-gray-800 hover:text-gray-600">Giỏ hàng (0)</a>
+                <a href="{{ route('cart.index') }}" class="mx-2 text-gray-800 hover:text-gray-600">
+                    Giỏ hàng ({{ Cart::getTotalQuantity() }})
+                </a>
             </div>
         </nav>
     </header>

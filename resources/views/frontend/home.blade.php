@@ -8,7 +8,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
         @foreach ($latestProducts as $product)
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <a href="{{ route('products.show', $product->slug) }}">
+                <a href="#">
                     @if($product->images->isNotEmpty())
                         <img src="{{ asset('storage/' . $product->images->first()->image_path) }}" alt="{{ $product->name }}" class="w-full h-64 object-cover">
                     @else
