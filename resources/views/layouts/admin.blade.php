@@ -25,10 +25,11 @@
             <a href="{{ route('admin.categories.index') }}">Quản lý Danh mục</a>
             <a href="{{ route('admin.products.index') }}">Quản lý Sản phẩm</a>
             <a href="{{ route('admin.orders.index') }}">Quản lý Đơn hàng</a>
+            <a href="{{ route('admin.reviews.index') }}">Quản lý Đánh giá</a>
+            <a href="{{ route('admin.users.index') }}">Quản lý thành viên</a>
+            <a href="{{ route('admin.contacts.index') }}">Quản lý liên hệ</a>
+            <a href="{{ route('admin.tags.index') }}">Quản lý từ khoá</a>
             <a href="{{ route('admin.post-categories.index') }}">Danh mục Bài viết</a>
-            <a href="{{ route('admin.users.index') }}">Thành viên</a>
-            <a href="{{ route('admin.contacts.index') }}">Liên hệ</a>
-            <a href="{{ route('admin.tags.index') }}">Từ khoá</a>
 
             {{-- THÊM NÚT ĐĂNG XUẤT VÀO ĐÂY --}}
             <form method="POST" action="{{ route('logout') }}">
