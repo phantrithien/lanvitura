@@ -27,3 +27,4 @@ Sử dụng git
 6. git commit -m "mô tả" : Commit thay đổi
 7. git remote add origin https://github.com/phantrithien/lanvitura.git : Kết nối với GitHub
 8. git push -u origin <main> : Đẩy mã lên remote
+9. git branch
