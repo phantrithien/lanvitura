@@ -1,104 +1,74 @@
-@extends('layouts.frontend')
+<x-frontend-layout>
+    <div class="bg-white">
+        <div class="pt-6">
+            <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <nav aria-label="Breadcrumb">
+                    <ol role="list" class="flex items-center space-x-2">
+                        <li><a href="{{ route('products.index') }}" class="text-sm font-medium text-gray-500 hover:text-gray-600">Sản phẩm</a></li>
+                        <li><span class="text-sm text-gray-400">/</span></li>
+                        <li><span class="text-sm font-medium text-gray-900">{{ $product->name }}</span></li>
+                    </ol>
+                </nav>
 
-@section('title', $product->name)
-
-@section('content')
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {{-- Phần hình ảnh --}}
-        <div>
-            @if ($product->images->isNotEmpty())
-                <div class="mb-4">
-                    <img src="{{ asset('storage/' . $product->images->first()->image_path) }}" alt="{{ $product->name }}" class="w-full h-auto rounded-lg shadow-md">
-                </div>
-                {{-- Hiển thị các ảnh con nếu có nhiều hơn 1 ảnh --}}
-                @if ($product->images->count() > 1)
-                    <div class="grid grid-cols-4 gap-4">
-                        @foreach ($product->images as $image)
-                            <img src="{{ asset('storage/' . $image->image_path) }}" alt="{{ $product->name }}" class="w-full h-24 object-cover rounded-md cursor-pointer border-2 border-transparent hover:border-blue-500">
-                        @endforeach
+                <div class="mx-auto max-w-2xl pt-10 pb-16 lg:max-w-7xl lg:grid lg:grid-cols-3 lg:grid-rows-[auto,auto,1fr] lg:gap-x-8 lg:pt-16 lg:pb-24">
+                    <div class="lg:col-span-2 lg:border-r lg:border-gray-200 lg:pr-8">
+                        @if($product->images->isNotEmpty())
+                            <img src="{{ asset('storage/' . $product->images->first()->image_path) }}" alt="{{ $product->name }}" class="h-full w-full object-cover object-center rounded-lg shadow-md">
+                            {{-- TODO: Thêm gallery ảnh nhỏ ở đây nếu có nhiều ảnh --}}
+                        @else
+                            <div class="aspect-w-1 aspect-h-1 w-full rounded-lg bg-gray-200 flex items-center justify-center">
+                                <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            </div>
+                        @endif
                     </div>
-                @endif
-            @else
-                <img src="https://placehold.co/600x600" alt="No image available" class="w-full h-auto rounded-lg shadow-md">
-            @endif
-        </div>
 
-        {{-- Phần thông tin sản phẩm --}}
-        <div>
-            <h1 class="text-4xl font-bold mb-4">{{ $product->name }}</h1>
-            <p class="text-2xl text-blue-600 font-semibold mb-6">{{ number_format($product->price) }} VNĐ</p>
-            
-            <div class="mb-6">
-                <h3 class="font-bold mb-2">Mô tả sản phẩm:</h3>
-                <p class="text-gray-700">{{ $product->description }}</p>
-            </div>
+                    <div class="mt-4 lg:row-span-3 lg:mt-0">
+                        <h1 class="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">{{ $product->name }}</h1>
+                        <h2 class="sr-only">Thông tin sản phẩm</h2>
+                        <p class="text-3xl tracking-tight text-gray-900 mt-4">
+                            {{ number_format($product->price, 0, ',', '.') }} đ
+                        </p>
 
-            <form action="{{ route('cart.add', $product->id) }}" method="POST" class="flex items-center gap-4 ajax-add-to-cart" data-action="{{ route('cart.add', $product->id) }}">
-                @csrf
-                <input type="number" name="quantity" value="1" min="1" class="w-20 border rounded px-3 py-2 text-center">
-                <button type="submit" class="bg-blue-600 text-white font-bold py-2 px-6 rounded hover:bg-blue-700 transition-colors">
-                    Thêm vào giỏ hàng
-                </button>
-            </form>
-            <p class="mt-4 text-gray-600">Còn lại: {{ $product->stock_quantity }} sản phẩm</p>
-        </div>
-    </div>
+                        @if (session('success'))
+                            <div class="mt-4 rounded-md bg-green-50 p-4">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.06 0l4.06-5.576z" clip-rule="evenodd" /></svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-green-800">{{ session('success') }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
 
-    <div class="mt-16">
-        <h2 class="text-2xl font-bold text-gray-900">Đánh giá của khách hàng</h2>
+                        <form action="{{ route('cart.store', $product) }}" method="POST" class="mt-10">
+                            @csrf
 
-        @if (session('success'))
-            <div class="bg-green-100 text-green-700 p-3 rounded mt-4">{{ session('success') }}</div>
-        @endif
-        @if (session('error'))
-            <div class="bg-red-100 text-red-700 p-3 rounded mt-4">{{ session('error') }}</div>
-        @endif
+                            <div class="mt-10">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-sm font-medium text-gray-900">Số lượng</h3>
+                                </div>
+                                <input type="number" name="quantity" value="1" min="1" max="{{ $product->stock_quantity }}" 
+                                       class="mt-2 block w-24 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                            </div>
 
-        @if(isset($canReview) && $canReview)
-        <div class="mt-6">
-            <h3 class="text-lg font-medium text-gray-900">Viết đánh giá</h3>
-            <form action="{{ route('reviews.store', $product->id) }}" method="POST" class="mt-4 space-y-4">
-                @csrf
-                <div>
-                    <label for="rating" class="block text-sm font-medium text-gray-700">Xếp hạng *</label>
-                    <select id="rating" name="rating" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                        <option value="5">5 Sao</option>
-                        <option value="4">4 Sao</option>
-                        <option value="3">3 Sao</option>
-                        <option value="2">2 Sao</option>
-                        <option value="1">1 Sao</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="comment" class="block text-sm font-medium text-gray-700">Bình luận</label>
-                    <textarea id="comment" name="comment" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
-                </div>
-                <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-                    Gửi đánh giá
-                </button>
-            </form>
-        </div>
-        @endif
+                            <button type="submit" class="mt-10 flex w-full items-center justify-center rounded-md border border-transparent bg-blue-600 px-8 py-3 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                Thêm vào giỏ hàng
+                            </button>
+                        </form>
+                    </div>
 
-        <div class="mt-8 flow-root">
-            @forelse($product->reviews as $review)
-            <div class="py-6 border-t border-gray-200">
-                <div class="flex items-center">
-                    <div class="font-medium text-gray-900">{{ $review->user->name }}</div>
-                    <div class="ml-4 flex items-center">
-                        @for ($i = 0; $i < 5; $i++)
-                            <svg class="h-5 w-5 {{ $i < $review->rating ? 'text-yellow-400' : 'text-gray-300' }}" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.368 2.447a1 1 0 00-.364 1.118l1.286 3.957c.3.921-.755 1.688-1.54 1.118l-3.368-2.447a1 1 0 00-1.175 0l-3.368 2.447c-.784.57-1.838-.197-1.539-1.118l1.286-3.957a1 1 0 00-.364-1.118L2.07 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.049 2.927z" />
-                            </svg>
-                        @endfor
+                    <div class="py-10 lg:col-span-2 lg:col-start-1 lg:border-r lg:border-gray-200 lg:pr-8 lg:pt-6">
+                        <div>
+                            <h3 class="sr-only">Mô tả</h3>
+                            <div class="space-y-6 text-base text-gray-900">
+                                {!! nl2br(e($product->description)) !!}
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <p class="mt-4 text-gray-600">{{ $review->comment }}</p>
-                <p class="mt-2 text-sm text-gray-500">{{ $review->created_at->diffForHumans() }}</p>
             </div>
-            @empty
-            <p class="mt-6 text-gray-500">Chưa có đánh giá nào cho sản phẩm này.</p>
-            @endforelse
         </div>
     </div>
-@endsection
+</x-frontend-layout>

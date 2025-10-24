@@ -3,55 +3,43 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Product as ProductModel;
-use App\Models\Order;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with('images')->latest()->paginate(9);
+        $query = Product::query()->with('images', 'category');
 
-        return view('frontend.products.index', compact('products'));
+        // Search logic
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        // Category filter logic
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+        
+        // Price filter logic
+        if ($request->filled('min_price')) {
+            $query->where('price', '>=', $request->min_price);
+        }
+        if ($request->filled('max_price')) {
+            $query->where('price', '<=', $request->max_price);
+        }
+
+        $products = $query->latest()->paginate(12);
+        $categories = Category::all();
+
+        return view('frontend.products.index', compact('products', 'categories'));
     }
 
     public function show(Product $product)
     {
-        // Tải các ảnh và các đánh giá cùng user
-        $product->load('images', 'reviews.user');
-
-        $canReview = false;
-        if (Auth::check()) {
-            $hasPurchased = Order::where('user_id', Auth::id())
-                                ->where('status', 'completed')
-                                ->whereHas('orderDetails', fn($q) => $q->where('product_id', $product->id))
-                                ->exists();
-
-            $hasReviewed = $product->reviews()->where('user_id', Auth::id())->exists();
-
-            if ($hasPurchased && !$hasReviewed) {
-                $canReview = true;
-            }
-        }
-
-        return view('frontend.products.show', compact('product', 'canReview'));
-    }
-
-    public function search(Request $request)
-    {
-        $request->validate([
-            'query' => 'required|string|min:2',
-        ]);
-
-        $query = $request->input('query');
-
-        $products = ProductModel::where('name', 'LIKE', "%{$query}%")
-                                ->orWhere('description', 'LIKE', "%{$query}%")
-                                ->paginate(12);
-
-        return view('frontend.products.search-results', compact('products', 'query'));
+        $product->load('images');
+        return view('frontend.products.show', compact('product'));
     }
 }

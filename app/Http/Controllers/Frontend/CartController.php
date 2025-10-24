@@ -15,6 +15,24 @@ class CartController extends Controller
         return view('frontend.cart.index', compact('cartItems'));
     }
 
+    public function store(Request $request, Product $product)
+    {
+        $cart = session()->get('cart', []);
+        $quantity = $request->input('quantity', 1);
+        if(isset($cart[$product->id])) {
+            $cart[$product->id]['quantity'] += $quantity;
+        } else {
+            $cart[$product->id] = [
+                "name" => $product->name,
+                "quantity" => $quantity,
+                "price" => $product->price,
+                "image" => $product->images->first() ? $product->images->first()->image_path : null
+            ];
+        }
+        session()->put('cart', $cart);
+        return redirect()->back()->with('success', 'Đã thêm sản phẩm vào giỏ hàng!');
+    }
+
     public function add(Request $request, Product $product)
     {
         Cart::add([
@@ -26,8 +44,7 @@ class CartController extends Controller
                 'image' => $product->image
             ]
         ]);
-
-        // If the request expects JSON (AJAX), return cart summary
+        
         if ($request->wantsJson() || $request->ajax() || $request->header('Accept') === 'application/json') {
             return response()->json([
                 'success' => true,

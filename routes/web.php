@@ -22,6 +22,9 @@ use App\Http\Controllers\Frontend\UserOrderController;
 use App\Http\Controllers\Frontend\ReviewController;
 use App\Http\Controllers\Frontend\ContactController;
 use App\Http\Controllers\Frontend\AddressController;
+use App\Http\Controllers\Frontend\PageController;
+use App\Http\Controllers\Frontend\BlogController;
+
 
 
 
@@ -30,9 +33,13 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/products', [FrontendProductController::class, 'index'])->name('products.index');
 Route::get('/products/{product}', [FrontendProductController::class, 'show'])->name('products.show');
+Route::get('/products/{product:slug}', [FrontendProductController::class, 'show'])->name('products.show');
+
 Route::get('/search', [FrontendProductController::class, 'search'])->name('products.search');
 
+// Cart Routes
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::post('/cart/add/{product}', [CartController::class, 'store'])->name('cart.store');
 Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.add');
 Route::patch('/cart/update/{rowId}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/remove/{rowId}', [CartController::class, 'remove'])->name('cart.remove');
@@ -40,7 +47,13 @@ Route::delete('/cart/remove/{rowId}', [CartController::class, 'remove'])->name('
 Route::get('/contact', [ContactController::class, 'index'])->name('contact.index');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 
-Route::get('/products/{product:slug}', [FrontendProductController::class, 'show'])->name('products.show');
+// Static Pages
+Route::get('/about', [PageController::class, 'about'])->name('about');
+
+// Blog
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{post:slug}', [BlogController::class, 'show'])->name('blog.show');
+
 
 // Admin Routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -89,4 +102,4 @@ Route::middleware('auth')->group(function () {
     Route::resource('addresses', AddressController::class);
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

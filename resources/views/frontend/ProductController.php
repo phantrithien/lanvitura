@@ -23,4 +23,9 @@ class ProductController extends Controller
         
         return view('frontend.products.show', compact('product'));
     }
+    
+    public function about()
+    {
+        return view('frontend.pages.about');
+    }
 }
