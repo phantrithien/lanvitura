@@ -5,82 +5,129 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Support\Str; // Thêm Str
 
 class CategoryController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Hiển thị danh sách các danh mục (Sản phẩm).
      */
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::all();
-        return view('admin.categories.index', compact('categories'));
+        $search = trim((string) $request->input('search', ''));
+        $state = $request->input('state', 'all');
+
+        $query = Category::query()->withCount('products');
+
+        if ($search !== '') {
+            $query->where(function ($innerQuery) use ($search) {
+                $innerQuery->where('name', 'like', "%{$search}%")
+                    ->orWhere('slug', 'like', "%{$search}%");
+            });
+        }
+
+        if ($state === 'with_products') {
+            $query->whereHas('products');
+        } elseif ($state === 'empty') {
+            $query->whereDoesntHave('products');
+        }
+
+        $categories = $query->latest('updated_at')->paginate(12)->withQueryString();
+
+        $latestUpdatedCategory = Category::latest('updated_at')->first();
+
+        $stats = [
+            'total' => Category::count(),
+            'with_products' => Category::has('products')->count(),
+            'empty' => Category::doesntHave('products')->count(),
+            'last_updated_at' => $latestUpdatedCategory?->updated_at,
+        ];
+
+        $topCategories = Category::withCount('products')
+            ->whereHas('products')
+            ->orderByDesc('products_count')
+            ->take(5)
+            ->get();
+
+        $recentCategories = Category::latest()
+            ->take(5)
+            ->get();
+
+        return view('admin.categories.index', [
+            'categories' => $categories,
+            'stats' => $stats,
+            'topCategories' => $topCategories,
+            'recentCategories' => $recentCategories,
+            'search' => $search,
+            'state' => $state,
+        ]);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Hiển thị form tạo danh mục mới.
      */
     public function create()
     {
+        // Trả về view mới
         return view('admin.categories.create');
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Lưu trữ danh mục mới vào cơ sở dữ liệu.
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|unique:categories|max:255',
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:categories,name',
+            'slug' => 'nullable|string|max:255|unique:categories,slug',
         ]);
 
-        Category::create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-        ]);
+        if (empty($validated['slug'])) {
+            $validated['slug'] = Str::slug($validated['name']);
+        }
 
-        return redirect()->route('admin.categories.index')->with('success', 'Tạo danh mục thành công!');
+        Category::create($validated);
+
+        return redirect()->route('admin.categories.index')->with('success', 'Danh mục sản phẩm đã được tạo.');
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(Category $category)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
+     * Hiển thị form chỉnh sửa danh mục.
      */
     public function edit(Category $category)
     {
+        $category->loadCount('products');
+
         return view('admin.categories.edit', compact('category'));
     }
 
     /**
-     * Update the specified resource in storage.
+     * Cập nhật danh mục trong cơ sở dữ liệu.
      */
     public function update(Request $request, Category $category)
     {
-        $request->validate([
-        'name' => 'required|max:255|unique:categories,name,' . $category->id,
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
+            'slug' => 'nullable|string|max:255|unique:categories,slug,' . $category->id,
         ]);
 
-        $category->update([
-        'name' => $request->name,
-        'slug' => Str::slug($request->name),
-        ]);
-        return redirect()->route('admin.categories.index')->with('success', 'Cập nhật danh mục thành công!');
+        if (empty($validated['slug'])) {
+            $validated['slug'] = Str::slug($validated['name']);
+        }
+
+        $category->update($validated);
+
+        return redirect()->route('admin.categories.index')->with('success', 'Danh mục sản phẩm đã được cập nhật.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Category $category)
     {
+        if ($category->products()->count() > 0) {
+            return redirect()->route('admin.categories.index')->with('error', 'Không thể xóa danh mục này vì vẫn còn sản phẩm.');
+        }
+
         $category->delete();
-        return redirect()->route('admin.categories.index')->with('success', 'Xóa danh mục thành công!');
+
+        return redirect()->route('admin.categories.index')->with('success', 'Danh mục sản phẩm đã được xóa.');
     }
 }
