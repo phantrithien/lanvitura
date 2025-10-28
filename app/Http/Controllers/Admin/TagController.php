@@ -12,10 +12,61 @@ class TagController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $tags = Tag::latest()->paginate(10);
-        return view('admin.tags.index', compact('tags'));
+        $search = trim((string) $request->input('search', ''));
+        $sort = $request->input('sort', 'newest');
+
+        $query = Tag::query();
+
+        if ($search !== '') {
+            $query->where(function ($inner) use ($search) {
+                $inner->where('name', 'like', "%{$search}%")
+                    ->orWhere('slug', 'like', "%{$search}%");
+            });
+        }
+
+        switch ($sort) {
+            case 'oldest':
+                $query->oldest('created_at');
+                break;
+            case 'name_asc':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'name_desc':
+                $query->orderBy('name', 'desc');
+                break;
+            default:
+                $query->latest('created_at');
+        }
+
+        $tags = $query->paginate(15)->withQueryString();
+
+        $stats = [
+            'total' => Tag::count(),
+            'created_this_month' => Tag::whereBetween('created_at', [now()->startOfMonth(), now()])->count(),
+            'created_this_week' => Tag::whereBetween('created_at', [now()->startOfWeek(), now()])->count(),
+            'last_created_at' => Tag::latest('created_at')->value('created_at'),
+        ];
+
+        $recentTags = Tag::latest('created_at')->take(6)->get();
+
+        $longestTags = Tag::select(['id', 'name', 'slug'])
+            ->selectRaw('CHAR_LENGTH(name) as name_length')
+            ->orderByDesc('name_length')
+            ->take(5)
+            ->get();
+
+        return view('admin.tags.index', [
+            'tags' => $tags,
+            'stats' => $stats,
+            'filters' => [
+                'search' => $search,
+                'sort' => $sort,
+            ],
+            'recentTags' => $recentTags,
+            'longestTags' => $longestTags,
+        ]);
     }
 
     /**
@@ -23,7 +74,9 @@ class TagController extends Controller
      */
     public function create()
     {
-        return view('admin.tags.create');
+        return view('admin.tags.create', [
+            'tag' => new Tag(),
+        ]);
     }
 
     /**
@@ -31,11 +84,17 @@ class TagController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate(['name' => 'required|string|max:255|unique:tags']);
-        Tag::create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name)
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:tags,name',
+            'slug' => 'nullable|string|max:255|unique:tags,slug',
         ]);
+
+        if (empty($validated['slug'])) {
+            $validated['slug'] = Str::slug($validated['name']);
+        }
+
+        Tag::create($validated);
+
         return redirect()->route('admin.tags.index')->with('success', 'Tạo từ khoá thành công.');
     }
 
@@ -61,11 +120,17 @@ class TagController extends Controller
      */
     public function update(Request $request, Tag $tag)
     {
-        $request->validate(['name' => 'required|string|max:255|unique:tags,name,' . $tag->id]);
-        $tag->update([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name)
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:tags,name,' . $tag->id,
+            'slug' => 'nullable|string|max:255|unique:tags,slug,' . $tag->id,
         ]);
+
+        if (empty($validated['slug'])) {
+            $validated['slug'] = Str::slug($validated['name']);
+        }
+
+        $tag->update($validated);
+
         return redirect()->route('admin.tags.index')->with('success', 'Cập nhật từ khoá thành công.');
     }
 
